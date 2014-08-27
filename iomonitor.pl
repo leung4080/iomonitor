@@ -14,9 +14,10 @@
 #       AUTHOR: LiangHuiQiang (), Leung4080@gmail.com
 # ORGANIZATION: 
 #      VERSION: 1.0
-#      CREATED: 2014/8/21 4:53:40
+#      CREATED: 2014/8/20 13:54:49
 #     REVISION: ---
 #===============================================================================
+
 
 use strict;
 use warnings;
@@ -53,28 +54,23 @@ foreach my $PID (@PS_LIST){
         $PID = trim($PID);
         $i++;
 }
-my @k=splice (@PS_LIST,$j,2);
+my @k=splice (@PS_LIST,$j,1);
 return(@PS_LIST);
 }
 
 sub getDATE{
     my($sec,$min,$hour,$day,$mon,$year,$weekday,$yeardate,$savinglightday)= (localtime(time));
 
-$sec = ($sec < 10)? "0$sec":$sec;
+    $sec = ($sec < 10)? "0$sec":$sec;
+    $min = ($min < 10)? "0$min":$min;
+    $hour = ($hour < 10)? "0$hour":$hour;
+    $day = ($day < 10)? "0$day":$day;
+    $mon = ($mon < 9)? "0".($mon+1):($mon+1);
+    $year += 1900;
 
-$min = ($min < 10)? "0$min":$min;
-
-$hour = ($hour < 10)? "0$hour":$hour;
-
-$day = ($day < 10)? "0$day":$day;
-
-$mon = ($mon < 9)? "0".($mon+1):($mon+1);
-
-$year += 1900;
-
-my $today = "$day.$mon.$year";
-my $date = "$hour:$min:$sec";
-return ($date);
+#my $today = "$day.$mon.$year";
+    my $date = "$hour:$min:$sec";
+    return ($date);
 }
 
 sub format_IO{
@@ -173,6 +169,7 @@ while ( $i <= $COUNT ) {
 my @proc_list=getPROC_LIST();
 my @proc_list_pre;
 my @proc_list_next;
+my @haveIO_list;
  foreach my $PID (@proc_list) {
      my @proc_IO=getProcIO($PID);
     
@@ -195,7 +192,7 @@ my @proc_list_next;
     push @LINE_ARR,$proc_IO[1];
     push @proc_list_next,[ @LINE_ARR ];
  }
- my @proc_list_new;
+# my @proc_list_new;
  for ( my $i=0;$i<=$#proc_list_pre;$i++  ) {
      my $PID=$proc_list[$i];
      my $READ;
@@ -212,24 +209,27 @@ my @proc_list_next;
      else{
          $WRITE=0;
      }
-     my @LINE_ARR;
-     push @LINE_ARR,$PID;
-     push @LINE_ARR,$READ;
-     push @LINE_ARR,$WRITE;
+     if ( $WRITE != 0 || $READ != 0){
+        my @LINE_ARR;
+        push @LINE_ARR,$PID;
+        push @LINE_ARR,format_IO($READ);
+        push @LINE_ARR,format_IO($WRITE);
      
-     push @proc_list_new,[ @LINE_ARR ];
- }
- my @haveIO_list;
-    
- for ( my $i=0; $i<=$#proc_list_new  ;$i++  ) {
-     if ( $proc_list_new[$i][1] !=0 || $proc_list_new[$i][2] !=0){
-         my @LINE_ARR;
-         push @LINE_ARR,$proc_list_new[$i][0];
-         push @LINE_ARR,format_IO($proc_list_new[$i][1]);
-         push @LINE_ARR,format_IO($proc_list_new[$i][2]);
+        #push @proc_list_new,[ @LINE_ARR ];
         push @haveIO_list,[ @LINE_ARR ];
-     }
+    }
  }
+
+    
+# for ( my $i=0; $i<=$#proc_list_new  ;$i++  ) {
+#     if ( $proc_list_new[$i][1] !=0 || $proc_list_new[$i][2] !=0){
+#         my @LINE_ARR;
+#         push @LINE_ARR,$proc_list_new[$i][0];
+#         push @LINE_ARR,format_IO($proc_list_new[$i][1]);
+#         push @LINE_ARR,format_IO($proc_list_new[$i][2]);
+#        push @haveIO_list,[ @LINE_ARR ];
+#     }
+# }
  
  for (my $i=0;$i<=$#haveIO_list;$i++){
     printf ("%s\t%10s\t%8s\t%8s\t%10s\n",getDATE,"$haveIO_list[$i][0]","$haveIO_list[$i][1]","$haveIO_list[$i][2]",getPROC_COMM($haveIO_list[$i][0]));
